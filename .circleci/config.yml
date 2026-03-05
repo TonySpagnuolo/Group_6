@@ -3,15 +3,15 @@
 version: 2.1
 
 jobs:
-lint:
-docker:
-- image: cimg/node:20.11
+  lint:
+    docker:
+      - image: cimg/node:20.11
 steps:
-- checkout
-- run: npm ci
-- run: npm run lint
+  - checkout
+  - run: npm ci
+  - run: npm run lint
 
 workflows:
-main:
-jobs:
-- lint
+  main:
+    jobs:
+      - lint
