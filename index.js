@@ -20,15 +20,25 @@ weatherForm.addEventListener("submit", async event => {
         }
     }
     else {
-        displayError("Please enter a city");
+        displayError("Please enter a city name or ZIP code");
     }
 
 });
 
 async function getWeatherData(city){
-
+    let apiUrl;
+    city = city.trim();
     //Edit this api call here to get different data
-    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`;
+    //If city is not a number use zip code, else use name lookup
+    if (isNaN(city)){
+        apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`;
+    }
+    else {
+        if (city.length !== 5){
+            throw new Error("Invalid ZIP code, enter 5 digits.")
+        }
+        apiUrl = `https://api.openweathermap.org/data/2.5/weather?zip=${city}&units=imperial&appid=${apiKey}`;
+    }
     const response = await fetch(apiUrl);
 
     if (!response.ok) {
