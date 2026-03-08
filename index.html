@@ -9,9 +9,15 @@
 </head>
 <body>
 
+    
+
     <form class="weatherForm">
-        <input type="text" class="cityInput" placeholder="Enter City">
-        <button type="submit">Get Weather</button>
+        <div class="searchBox">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="cityInput" type="text" placeholder="Search for a city...">
+        <i class="fa-solid fa-xmark clearBtn"></i>
+        <div class="suggestions"></div>
+    </div>
     </form>
 
     <div class="card" style="display: none"> 

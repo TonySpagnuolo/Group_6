@@ -3,11 +3,60 @@ const cityInput = document.querySelector(".cityInput");
 const card = document.querySelector(".card");
 const apiKey = "8e2d81f77bf781eee278d91811303875";
 
+const clearBtn = document.querySelector(".clearBtn");
+
+const suggestions = document.querySelector(".suggestions");
+
+cityInput.addEventListener("input", async () => {
+
+    const query = cityInput.value;
+
+    if(query.length < 2){
+        suggestions.innerHTML = "";
+        return;
+    }
+
+    const response = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${apiKey}`
+    );
+
+    const cities = await response.json();
+
+    suggestions.innerHTML = "";
+
+    cities.forEach(city => {
+
+        const div = document.createElement("div");
+        div.classList.add("suggestionItem");
+
+        div.textContent = `${city.name}, ${city.state || ""} ${city.country}`;
+
+        div.addEventListener("click", () => {
+
+            cityInput.value = city.name;
+            suggestions.innerHTML = "";
+
+            weatherForm.dispatchEvent(new Event("submit"));
+        });
+
+        suggestions.appendChild(div);
+    });
+
+});
+
+clearBtn.addEventListener("click", () => {
+    cityInput.value = "";
+    cityInput.focus();
+});
+
 weatherForm.addEventListener("submit", async event => {
 
     event.preventDefault();
 
     const city = cityInput.value.trim();
+
+    suggestions.innerHTML = "";
+    cityInput.blur();   // removes focus glow
 
     if (city){
         try {
