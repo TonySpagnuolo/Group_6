@@ -45,11 +45,14 @@ cityInput.addEventListener("input", async () => {
             cityInput.blur();
 
             getWeatherDataByCoords(city.lat, city.lon)
-                .then(weatherData => {
+                .then(async (weatherData) => {
                     displayWeatherInfo(weatherData);
                     const lat = weatherData.coord.lat;
                     const lon = weatherData.coord.lon;
-                    return getForecastData(lat, lon).then(display7DayForecast);
+                    const forecastData = await getForecastData(lat, lon);
+                    display7DayForecast(forecastData);
+                    const hourlyData = await getHourlyForecastData(lat, lon);
+                    displayHourlyForecast(hourlyData);
                 })
                 .catch(displayError);
         });
@@ -90,6 +93,8 @@ if (!isNaN(city)) {
     displayWeatherInfo(weatherData);
     const forecastData = await getForecastData(weatherData.coord.lat, weatherData.coord.lon);
     display7DayForecast(forecastData);
+    const hourlyData = await getHourlyForecastData(weatherData.coord.lat, weatherData.coord.lon);
+    displayHourlyForecast(hourlyData);
     return;
 }
 
@@ -114,6 +119,8 @@ if (!isNaN(city)) {
             displayWeatherInfo(weatherData);
             const forecastData = await getForecastData(weatherData.coord.lat, weatherData.coord.lon);
             display7DayForecast(forecastData);
+            const hourlyData = await getHourlyForecastData(weatherData.coord.lat, weatherData.coord.lon);
+            displayHourlyForecast(hourlyData);
         } else {
             // show disambiguation list
             unique.forEach(match => {
@@ -305,6 +312,22 @@ async function getForecastData(lat, lon){
     return await response.json();
 }
 
+async function getHourlyForecastData(lat, lon){
+    const apiUrl = "https://api.open-meteo.com/v1/forecast" +
+"?latitude=" + lat +
+"&longitude=" + lon +
+"&hourly=temperature_2m,weathercode,precipitation_probability" +
+"&temperature_unit=fahrenheit" +
+"&timezone=auto" +
+"&forecast_days=2";
+
+const response = await fetch(apiUrl);
+if (!response.ok) {
+    throw new Error("Could not fetch hourly forecast data");
+}
+return await response.json();
+}
+
 function display7DayForecast(forecastData){
     const oldForecast = document.querySelector(".forecast");
     if (oldForecast){
@@ -358,6 +381,60 @@ function display7DayForecast(forecastData){
     forecastContainer.appendChild(row);
     forecastWrapper.textContent = "";
     forecastWrapper.appendChild(forecastContainer);
+}
+
+function displayHourlyForecast(hourlyData){
+    const panel = document.querySelector(".hourlyPanel");
+    panel.style.display = "flex";
+
+    const hourlyList = document.querySelector(".hourlyList");
+    hourlyList.innerHTML = "";
+    const header = document.createElement("div");
+    header.classList.add("hourlyHeader");
+    header.innerHTML = `
+        <div class="hourlyTime">Time</div>
+        <div class="hourlyEmoji">Forecast</div>
+        <div class="hourlyRain">Percipitation</div>
+        <div class="hourlyTemp">Temp</div>
+    `;
+    hourlyList.appendChild(header);
+
+    const times = hourlyData.hourly.time;
+    const temps = hourlyData.hourly.temperature_2m;
+    const codes = hourlyData.hourly.weathercode;
+    const rain = hourlyData.hourly.precipitation_probability;
+
+    // find the first hour past the current time
+    const now = new Date();
+    let startIndex = 0;
+
+    for (let i = 0; i < times.length; i++){
+        if (new Date(times[i]) >= now){
+            startIndex = i;
+            break;
+        }
+    }
+
+    // show next 24 hours
+    const endIndex = Math.min(startIndex + 24, times.length);
+
+    for (let i = startIndex; i < endIndex; i++){
+        const t = new Date(times[i]);
+        const label = t.toLocaleTimeString("en-US", { hour: "numeric" });
+        const rainPct = rain[i];
+
+        const emoji = getForecastEmoji(codes[i]);
+
+        const item = document.createElement("div");
+        item.classList.add("hourlyItem");
+        item.innerHTML = `  
+            <div class="hourlyTime">${label}</div>
+            <div class="hourlyEmoji">${emoji}</div>
+            <div class="hourlyRain">${rainPct}%</div>
+            <div class="hourlyTemp">${Math.round(temps[i])}°F</div>
+        `;
+        hourlyList.appendChild(item);
+    }
 }
 
 function getForecastEmoji(code){
