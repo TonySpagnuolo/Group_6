@@ -122,6 +122,8 @@ locationBtn.addEventListener("click", () => {
     }
     navigator.geolocation.getCurrentPosition(showGeolocationWeather, handleGeolocationErrors);
 });
+// ----- END Functions for using current Geolocation -----
+
 
 weatherForm.addEventListener("submit", async event => {
     event.preventDefault();
