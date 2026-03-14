@@ -110,6 +110,7 @@ async function showGeolocationWeather(position) {
         
     } 
     catch (error) {
+        console.error("Geolocation Weather Error:", error);
         displayError("Could not fetch weather data for your location.");
     }
 }
